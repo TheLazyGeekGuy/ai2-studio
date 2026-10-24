@@ -1,4 +1,5 @@
 [
+ "test-ai2-catalog-parity.mjs",
  "test-ai2-universal-library.mjs",
  "test-ai2-workstation-layout.mjs",
  "test-korg-ai2-combi.mjs",

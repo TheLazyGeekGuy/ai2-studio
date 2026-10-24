@@ -71,3 +71,25 @@
 .x5-tabs-row .x5-find{padding-bottom:6px}
 .x5-tabs-row .x5-find label{display:flex;flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0}
 .x5-tabs-row .x5-find input{width:220px}
+/* Mockup alignment (2026-10-25): façade, caption and toolbar stay in view while the pages scroll; the façade is the
+   faithful panel at a compact height; one toolbar line. */
+.x5-sticky{position:sticky;top:0;z-index:6;background:var(--theme-bg,var(--theme-panel));padding-top:8px;box-shadow:0 10px 14px -10px rgba(0,0,0,.55)}
+.x5-sticky .x5-panel-surface{padding:0 0 6px;margin:0;overflow:visible}
+.x5-sticky .x5-panel-surface>svg,.x5-sticky .x5-panel-surface .x5dr-panel{display:block;width:auto;max-width:100%;height:auto;max-height:140px;margin:0 auto}
+.x5-sticky .x5-panel-caption{padding:2px 0 6px}
+.x5-sticky .x5-toolbar{padding:6px 0 8px;border-bottom:1px solid var(--theme-line)}
+.x5-toolbar-end{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap}
+.x5-toolbar-end .x5-connection-toggle{margin-left:0}
+.x5-edit-badge{font-size:11px;font-weight:700;letter-spacing:.08em;padding:3px 7px;border-radius:4px;background:#3a2f17;color:#f3c46b}
+.x5-buffer-actions label input[aria-label="Édition auto"]{margin:0}
+.x5-draft-pending{font-size:11px;padding:2px 8px;border-color:#7a6127;color:#f3c46b;background:none;margin-right:8px}
+.x5-drawer-bar>small{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.x5-buffer-actions label{flex-direction:row;text-transform:none;letter-spacing:0;font-size:13px;white-space:nowrap}
+.x5-drawer-bar{flex-wrap:nowrap}
+.x5-drawer-bar>small{flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block}
+.x5-drawer-bar>nav{flex:0 0 auto}
+@media (max-width:900px){.x5-drawer-bar{flex-wrap:wrap}}
+.x5-sticky .x5-toolbar{gap:8px 10px}
+.x5-toolbar .x5-current-patch{gap:6px}
+.x5-toolbar .x5-current-patch input[maxlength]{width:104px}
+.x5-toolbar .x5-current-patch .x5-patch-number button{min-height:32px}

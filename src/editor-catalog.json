@@ -3,7 +3,7 @@
     "manifest": {
       "id": "korg-x5dr-editor",
       "modelId": "korg-x5dr",
-      "name": "Korg X5DR · POC",
+      "name": "Korg AI²",
       "version": "0.1.0",
       "sdkVersion": 1,
       "stateSchemaVersion": 1,
@@ -19,7 +19,7 @@
     },
     "presentation": {
       "manufacturer": "Korg",
-      "model": "X5DR · POC",
+      "model": "AI²",
       "preview": {
         "src": "/editor-previews/korg-x5dr.svg",
         "width": 1240,

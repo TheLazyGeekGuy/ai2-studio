@@ -1,0 +1,6 @@
+import {validateDeviceData,type DeviceData} from './device-data'
+import {validateState,type X5State} from './model'
+import {validateCombination,type CombinationState} from './combination'
+export type PanelMode=0|1|2|3
+export interface X5WorkspaceState {format:'korg-x5dr-workspace';version:1|2;deviceData?:DeviceData;program:X5State;combination:CombinationState;panel:{mode:PanelMode;bank:'A'|'G';program:number;combi:number;combiPage:0|1}}
+export function validateSessionState(value:unknown):X5State|X5WorkspaceState {const v=value as X5WorkspaceState;if(v?.format!=='korg-x5dr-workspace')return validateState(value);const p=v.panel,program=validateState(v.program),combination=validateCombination(v.combination);if(![1,2].includes(v.version)||v.version===1&&v.deviceData!==undefined||v.version===2&&v.deviceData===undefined||!p||![0,1,2,3].includes(p.mode)||!['A','G'].includes(p.bank)||!Number.isInteger(p.program)||p.program<0||p.program>(p.bank==='A'?99:135)||!Number.isInteger(p.combi)||p.combi<0||p.combi>99||![0,1].includes(p.combiPage)||program.channel!==combination.channel)throw Error('Invalid X5DR workspace state');return Object.freeze({format:v.format,version:v.version,...(v.version===2?{deviceData:validateDeviceData(v.deviceData)}:{}),program,combination,panel:Object.freeze({mode:p.mode,bank:p.bank,program:p.program,combi:p.combi,combiPage:p.combiPage})})}

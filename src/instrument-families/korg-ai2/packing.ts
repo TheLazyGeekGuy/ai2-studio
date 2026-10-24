@@ -1,0 +1,4 @@
+/** AI² packing mechanics only; no frame, model, operation or MIDI authority. */
+export function byteArray(raw:readonly number[]){if(!Array.isArray(raw)||raw.some(v=>!Number.isInteger(v)||v<0||v>255))throw Error('Octets invalides');return raw}
+export function pack7(raw:readonly number[]){byteArray(raw);const out:number[]=[];for(let i=0;i<raw.length;i+=7){const b=raw.slice(i,i+7);out.push(b.reduce((v,n,j)=>v|((n>>7)<<j),0),...b.map(n=>n&127))}return out}
+export function unpack7(raw:readonly number[]){if(raw.some(v=>!Number.isInteger(v)||v<0||v>127))throw Error('Données MIDI hors plage');const out:number[]=[];for(let i=0;i<raw.length;i+=8){const b=raw.slice(i,i+8);if(b.length<2||b[0]>>(b.length-1))throw Error('Invalid unused packing bits or incomplete packed group');for(let n=1;n<b.length;n++)out.push(b[n]|(((b[0]>>(n-1))&1)<<7))}return out}

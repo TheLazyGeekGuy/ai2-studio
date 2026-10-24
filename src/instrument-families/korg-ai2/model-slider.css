@@ -1,0 +1,25 @@
+/* AI² model selector: the M3000 / M2000 device slider, themed by the X5DR / AI² variables. The m3k-device rules are
+   repeated here, scoped, because m3000.css is only loaded with the TC editors. */
+.ai2-model-slider{--m3k-accent:var(--x5-accent,#a5adff);--m3k-line:var(--theme-line,#3a403c);--m3k-panel:var(--theme-panel,#1b1f23);--m3k-surface:var(--theme-surface,#242926);--m3k-muted:var(--theme-muted,#9aa3ad);display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 0;border-bottom:1px solid var(--theme-line)}
+.ai2-model-slider .m3k-device{flex:1 1 560px;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:6px 10px;border:1px solid var(--m3k-line);border-radius:4px;background:var(--m3k-panel)}
+.ai2-model-slider .m3k-device-title{color:var(--m3k-muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.ai2-model-slider .m3k-device-track{display:flex;flex-direction:column;gap:2px;flex:1 1 420px;max-width:none;min-width:0}
+.ai2-model-slider .m3k-device-mount{min-height:30px}
+.ai2-model-slider .m3k-device-mount>*{--m3k-device-width:100%}
+.ai2-model-slider .m3k-device-fallback{color:var(--m3k-muted);font-size:12px}
+/* One grid column per position, each centred on the slider's own position i/(n-1): the slider track is the mount
+   width minus the 9 px inset of each end, so the grid is one column wider and shifted left by half a column. Labels
+   alternate on two rows so that long ids keep two columns of room. */
+.ai2-model-slider .m3k-device-stops{--column:calc((100% - 18px) / (var(--stops) - 1));display:grid;grid-template-columns:repeat(var(--stops),minmax(0,1fr));width:calc(var(--column) * var(--stops));margin-left:calc(9px - var(--column) / 2);row-gap:1px}
+.ai2-model-slider .m3k-device-stops button{justify-self:center;display:flex;align-items:center;padding:1px 6px;min-height:22px;border:1px solid transparent;border-radius:4px;background:none;color:var(--m3k-muted);font-size:11.5px;white-space:nowrap;cursor:pointer;position:relative;max-width:calc(200% - 4px);overflow:hidden;text-overflow:ellipsis}
+.ai2-model-slider .m3k-device-stops button::before{content:"";position:absolute;left:50%;top:-4px;width:1px;height:3px;background:var(--m3k-line)}
+.ai2-model-slider .m3k-device-stops button[data-group-start]{color:color-mix(in srgb,var(--m3k-muted) 70%,var(--theme-text))}
+.ai2-model-slider .m3k-device-stops button:hover:not(:disabled){color:var(--theme-text)}
+.ai2-model-slider .m3k-device-stops button[aria-pressed=true]{color:var(--m3k-accent);border-color:var(--m3k-accent);font-weight:700}
+.ai2-model-card{flex:0 1 380px;min-width:240px;display:flex;flex-direction:column;gap:5px}
+.ai2-model-slider .ai2-model-card label{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:15px;font-weight:600;margin:0}
+.ai2-model-slider .ai2-model-card select{width:auto;min-width:0;background:var(--theme-panel);color:var(--theme-text);border:1px solid var(--theme-line);padding:4px 6px;border-radius:5px;font-weight:600;font-size:14px}
+.ai2-model-card small{color:var(--theme-muted);font-size:12px}
+.ai2-model-card ul{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;list-style:none}
+.ai2-model-card li{font-size:11px;padding:2px 7px;border-radius:10px;border:1px solid #2f5a44;background:#16241d;color:#9fe3bd}
+.ai2-model-card li[data-ok=false]{border-color:#5a4a24;background:#221d12;color:#f3dca8}

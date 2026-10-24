@@ -1,0 +1,3 @@
+import {readFile} from './codec'
+import {combinationProfile,decodeAi2Combination,type Ai2Combination} from './combination'
+export function readAi2FamilyFile(bytes:readonly number[],model:string,decoded=false){const read=readFile(bytes,model,decoded),combinations:Ai2Combination[]=[],profile=combinationProfile(model),unconverted=read.unconverted.filter(frame=>{if(!profile||frame.original[0]!==240||!(profile.buffer===frame.original[4]||profile.bank===frame.original[4]))return true;try{const patches=decodeAi2Combination(frame.original,model);if(read.programs.length+combinations.length+patches.length>512)throw Error('512 patches maximum');combinations.push(...patches);return false}catch(e){frame.reason=String(e);return true}});return {...read,combinations,unconverted}}

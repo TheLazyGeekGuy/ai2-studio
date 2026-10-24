@@ -1,0 +1,13 @@
+[
+  {
+    "id": "korg-x5dr-editor",
+    "module": {
+      "path": "../editors/korg-x5dr/module",
+      "export": "x5drModule"
+    },
+    "view": {
+      "path": "../editors/korg-x5dr/registration",
+      "export": "x5drView"
+    }
+  }
+]

@@ -1,0 +1,10 @@
+import {useEffect,useRef,useState} from 'react'
+/** Commit once, on Enter or blur; Escape cancels. No per-keystroke patch selection. */
+export function PatchNumber({value,min,max,prefix,disabled,onChange,lcd=false,unknown=false}:{value:number;min:number;max:number;prefix:string;disabled:boolean;onChange:(n:number)=>void;lcd?:boolean;unknown?:boolean}){
+ const [editing,setEditing]=useState(false),[draft,setDraft]=useState(''),[error,setError]=useState(''),input=useRef<HTMLInputElement>(null),committed=useRef(false),label=prefix+(unknown?(prefix==='G'?'???':'??'):String(value).padStart(prefix==='G'?3:2,'0'))
+ useEffect(()=>{if(editing){input.current?.focus();input.current?.select()}},[editing])
+ useEffect(()=>{if(disabled){committed.current=true;setEditing(false)}},[disabled])
+ const begin=()=>{if(disabled)return;committed.current=false;setDraft(String(value));setError('');setEditing(true)}
+ const finish=(cancel=false)=>{if(committed.current)return;const n=Number(draft);if(!cancel&&(!/^\d+$/.test(draft)||!Number.isInteger(n)||n<min||n>max)){setError('Entrer un numéro de '+min+' à '+max);input.current?.focus();return}committed.current=true;setEditing(false);setError('');if(!cancel&&(n!==value||unknown))onChange(n)}
+ return <span className={'x5-patch-number'+(lcd?' x5-patch-number-lcd':'')}>{editing?<input ref={input} type="text" inputMode="numeric" aria-label="Patch number entry" aria-invalid={!!error} title={error||'Entrée pour valider · Échap pour annuler'} value={draft} onChange={e=>{setDraft(e.target.value);setError('')}} onBlur={()=>finish()} onKeyDown={e=>{if(e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();finish(e.key==='Escape')}}}/>:<button type="button" aria-label={'Patch number '+label+' · double-click to enter'} title="Double-clic pour saisir le numéro · Entrée / F2 au clavier" disabled={disabled} onDoubleClick={begin} onKeyDown={e=>{if(e.key==='Enter'||e.key==='F2'){e.preventDefault();begin()}}}>{lcd?<span className="x5-sr-only">{label}</span>:label}</button>}{error&&!lcd&&<small role="alert">{error}</small>}</span>
+}

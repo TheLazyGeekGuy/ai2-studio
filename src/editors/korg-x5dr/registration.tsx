@@ -110,7 +110,7 @@ function View({context,ports,onMidiSettingsReady,...props}:EditorViewProps&{cont
  const chooseTimbreProgram=async(id:number,value:number)=>{try{if(session.getSnapshot().panelMode===0){setDeviceOpen(false);disarm();if(snapshot.identified)await automation.mode(1);else session.dispatch({type:'panel-mode',mode:1});setTab(auto.autoEdit?'Zones':'Overview')}run({type:'value',id,value})}catch(e){setError(String(e))}}
  const onPanelKey=(key:PanelKey)=>{
   if(disabled||snapshot.pending>0)return
-  if(key==='combi'){setManualEdit(false);changeMode(0);return}
+  if(key==='combi'){if(isCombi&&(isPlay||selectionView)){run({type:'combi-page',value:1});return}setManualEdit(false);changeMode(0);return}
   if(key==='prog'){setManualEdit(false);changeMode(2);return}
   if(key==='edit'){if(selectionView){setManualEdit(true);return}if(auto.autoEdit&&manualEdit&&!isPlay){setManualEdit(false);return}setManualEdit(true);changeMode(isCombi?1:3);return}
   if(key==='global'){setDeviceOpen(v=>!v);if(!deviceOpen&&auto.autoEdit)void automation.multi().catch(e=>setError(String(e)));else automation.stop();return}

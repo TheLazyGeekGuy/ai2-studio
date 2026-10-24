@@ -3,7 +3,7 @@
 // model slider can carry every model id. Pure layout: no DOM, no MIDI.
 import assert from 'node:assert/strict'
 import {build} from 'esbuild'
-const r=await build({stdin:{contents:`export * from './src/instrument-families/korg-ai2/models';export * from './src/instrument-families/korg-ai2/parameters';export * from './src/instrument-families/korg-ai2/oscillator-layout';export * from './src/editors/korg-x5dr/program-layout';export {parameters,effectParameters,initialState} from './src/editors/korg-x5dr/model'`,resolveDir:process.cwd()},bundle:true,write:false,format:'esm',platform:'node',metafile:true})
+const r=await build({stdin:{contents:`export * from './src/instrument-families/korg-ai2/models';export * from './src/instrument-families/korg-ai2/parameters';export * from './src/instrument-families/korg-ai2/oscillator-layout';export * from './src/editors/korg-x5dr/program-layout';export * from './src/instrument-families/korg-ai2/model-years';export {parameters,effectParameters,initialState} from './src/editors/korg-x5dr/model'`,resolveDir:process.cwd()},bundle:true,write:false,format:'esm',platform:'node',metafile:true})
 assert.ok(!Object.keys(r.metafile.inputs).some(p=>p.endsWith('.tsx')||p.includes('node_modules')),'Layout stays free of view code')
 const m=await import('data:text/javascript;base64,'+Buffer.from(r.outputFiles[0].text).toString('base64'))
 
@@ -12,6 +12,8 @@ assert.equal(m.ai2Models.length,21)
 assert.equal(new Set(m.ai2Models.map(x=>x.id)).size,21)
 for(const x of m.ai2Models)assert.ok(!x.id.includes(','),'Slider label must not contain a comma: '+x.id)
 assert.ok(m.ai2Models.some(x=>x.id==='X5DR'))
+for(const x of m.ai2Models)assert.ok(Number.isInteger(m.ai2ModelYears[x.id])&&m.ai2ModelYears[x.id]>=1991&&m.ai2ModelYears[x.id]<=1999,'Release year for '+x.id)
+assert.equal(Object.keys(m.ai2ModelYears).length,21,'No year for an unknown model')
 
 // File models: both dump layouts, both oscillators.
 const where=cells=>Object.fromEntries(cells.flatMap(c=>c.cards.map(k=>[k.card,[c.col,c.row]])))

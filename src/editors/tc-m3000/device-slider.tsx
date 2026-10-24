@@ -28,7 +28,7 @@ function register():Promise<void>{
  })
 }
 
-export interface DeviceChoice<Id extends string> {id:Id;label:string;detail:string;group?:string}
+export interface DeviceChoice<Id extends string> {id:Id;label:string;detail:string;group?:string;note?:string}
 /** Two-or-more-position slider. The wheel is disabled (a scroll never switches the device); arrows and a click or
  * drag on the track do. Switching device is not destructive: each device keeps its own workspace.
  * `compact` stops show the label only (detail as tooltip), each centred under its own slider position on two
@@ -58,7 +58,7 @@ export function DeviceSlider<Id extends string>({choices,value,disabled,onChange
    <div ref={mount} className="m3k-device-mount"/>
    {!ready&&<span className="m3k-device-fallback">{failure?`Sélecteur indisponible (${failure}) : utilisez les boutons.`:'Chargement du sélecteur…'}</span>}
    <div className="m3k-device-stops" style={compact?{['--stops' as string]:choices.length}:undefined}>{choices.map((c,i)=><button key={c.id} type="button" aria-pressed={i===index} disabled={disabled} title={compact?c.detail:undefined} data-group-start={compact&&i>0&&c.group!==choices[i-1].group||undefined} style={compact?{gridColumn:i+1,gridRow:i%2+1}:undefined} onClick={()=>{if(c.id!==value)onChange(c.id)}}>
-    <strong>{c.label}</strong>{!compact&&<small>{c.detail}</small>}</button>)}</div>
+    <strong>{c.label}</strong>{compact&&c.note&&<small className="m3k-device-note">{c.note}</small>}{!compact&&<small>{c.detail}</small>}</button>)}</div>
   </div>
  </div>
 }

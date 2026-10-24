@@ -126,3 +126,10 @@
 .x5-midi-dialog .x5-connection-grid>span{flex:1 1 100%;font-size:12px;color:var(--theme-muted)}
 .x5-midi-keyboard .x5-performance,.x5-midi-keyboard>*{max-width:100%}
 .x5dr-editor .midi-settings-dialog input[type=checkbox]{width:auto;flex:0 0 auto;margin:0}
+/* 2026-10-25: the façade keeps its original full size (owner's request); only the toolbar stays in view while the
+   pages scroll. */
+.x5-sticky{position:static;box-shadow:none;padding-top:0}
+.x5-sticky .x5-panel-surface>svg,.x5-sticky .x5-panel-surface .x5dr-panel{width:100%;max-height:none;margin:0}
+.x5-sticky .x5-panel-surface{padding:4px 1px 16px;margin:4px 0 0}
+.x5-sticky .x5-toolbar{position:sticky;top:0;z-index:6;background:var(--theme-bg,var(--theme-panel));box-shadow:0 10px 14px -10px rgba(0,0,0,.55)}
+.x5-sticky{display:contents}

@@ -29,7 +29,7 @@ export function Panel({snapshot,onKey,editEnabled=false,interactive=true,patchNu
   <path d="M36 79Q63 96 91 79" stroke="#aab8d2" strokeWidth=".7" fill="none"/>
   <text x="171" y="85" textAnchor="middle" fontSize="8" letterSpacing=".7">GENERAL</text><text x="171" y="109" textAnchor="middle" fontSize="24" fontWeight="900" letterSpacing="-3">MIDI</text><path d="M149 113H194V92M149 92V113" fill="none" stroke="#c8cec5" strokeWidth="1"/>
   <text x="611" y="99" fontSize="10" fontWeight="700">MIDI</text>
-  <text x="1198" y="38" textAnchor="end" fontSize="22" fontWeight="900" letterSpacing="-1">KORG</text><text x="1198" y="70" textAnchor="end" fontSize="37" fontStyle="italic" letterSpacing="-2">X5DR</text>
+  <text x="1198" y="70" textAnchor="end" fontSize="37" fontStyle="italic" letterSpacing="-2">X5DR</text>
   <path d="M1084 81H1198V90H1084Z" fill="#c8cecc"/><path d="M1172 81H1198V90H1172Z" fill="#a4b9e3"/>
   <text x={g.power.x} y="120" textAnchor="middle" fontSize="11">POWER</text>
  </g>

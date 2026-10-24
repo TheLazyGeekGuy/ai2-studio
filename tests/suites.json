@@ -16,6 +16,7 @@
  "test-x5dr-lcd-presets.mjs",
  "test-x5dr-library.mjs",
  "test-x5dr-modes.mjs",
+ "test-x5dr-multi-layers.mjs",
  "test-x5dr-play-buffer.mjs",
  "test-x5dr-session-resume.mjs",
  "test-x5dr-zones.mjs"

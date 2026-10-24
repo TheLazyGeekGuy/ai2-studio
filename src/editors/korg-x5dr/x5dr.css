@@ -133,3 +133,26 @@
 .x5-sticky .x5-panel-surface{padding:4px 1px 16px;margin:4px 0 0}
 .x5-sticky .x5-toolbar{position:sticky;top:0;z-index:6;background:var(--theme-bg,var(--theme-panel));box-shadow:0 10px 14px -10px rgba(0,0,0,.55)}
 .x5-sticky{display:contents}
+/* Multi: the 16 parts and their parameters at once; the keyboard map below folds. */
+.x5-multi-table-scroll{overflow-x:auto;margin:10px 0;border:1px solid var(--theme-line);border-radius:8px}
+.x5-multi-table{width:100%;border-collapse:collapse;font-size:12px;min-width:1100px}
+.x5-multi-table caption{text-align:left;padding:8px 10px;font-weight:600;font-size:13px}
+.x5-multi-table th,.x5-multi-table td{padding:2px 4px;border-top:1px solid var(--theme-line);text-align:left;white-space:nowrap}
+.x5-multi-table thead th{font-size:11px;font-weight:600;color:var(--theme-muted);text-transform:none;letter-spacing:0}
+.x5-multi-table tbody th{font:600 12px ui-monospace,Menlo,monospace;text-align:center;width:28px}
+.x5-multi-table tr[data-selected]{background:color-mix(in srgb,var(--x5-accent) 12%,transparent)}
+.x5-multi-table tr[data-off] td:not(:nth-child(2)){opacity:.55}
+.x5-multi-table input[type=number]{width:52px;padding:2px 4px;font:12px ui-monospace,Menlo,monospace;text-align:right}
+.x5-multi-table select{max-width:92px;padding:2px 4px;font-size:12px}
+.x5-multi-level{display:flex;align-items:center;gap:6px;min-width:130px}
+.x5-multi-level input{width:90px;accent-color:var(--x5-accent)}
+.x5-multi-level output{font:12px ui-monospace,Menlo,monospace;width:26px;text-align:right}
+.x5-multi-program{min-width:170px;max-width:220px;overflow:hidden;text-overflow:ellipsis;text-align:left;padding:3px 8px;font-size:12px}
+.x5-multi-filters button+button{margin-left:2px}
+.x5-multi-filters button{padding:2px 5px;font-size:11px;min-height:0}
+.x5-multi-filters button[aria-pressed=true]{border-color:var(--x5-accent);color:var(--x5-accent)}
+.x5-layer-map>header{align-items:center}
+.x5-layer-toggle{padding:4px 10px;font-size:12px;white-space:nowrap}
+.x5dr-editor .x5-multi-table :is(input[type=number],select,button){height:24px;min-height:0;padding-top:0!important;padding-bottom:0!important;margin:0;box-sizing:border-box}
+.x5dr-editor .x5-multi-table td{height:28px;vertical-align:middle}
+.x5dr-editor .x5-multi-table input[type=range]{height:16px}

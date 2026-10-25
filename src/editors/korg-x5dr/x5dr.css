@@ -32,7 +32,7 @@
 
 .x5dr-editor .ai2-model-picker{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--theme-line)}.ai2-model-picker label{display:flex;gap:10px;align-items:center;font-size:13px}.ai2-model-picker select{background:var(--theme-panel);color:var(--theme-text);border:1px solid var(--theme-line);padding:8px;border-radius:5px}.ai2-model-picker small{margin-left:auto;color:var(--theme-muted);font-size:11px}
 .x5-layer-program{fill:transparent;cursor:pointer}.x5-layer-program:hover{fill:currentColor;fill-opacity:.06}.x5-layer-program:focus-visible{outline:none;stroke:var(--x5-accent);stroke-width:2}.x5-layer-program[aria-disabled=true]{cursor:default}
-/* Workstation shell (validated mockup of 24/10/2026, forge #102): one toolbar under the facade, the MIDI connection in
+/* Workstation shell (validated mockup of 24/10/2026): one toolbar under the facade, the MIDI connection in
    one panel (also opened from the host's connection button), occasional tools in a bottom drawer. */
 .x5-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 0;border-bottom:1px solid var(--theme-line)}
 .x5-toolbar .x5-mode-bar{padding:0;border:0;gap:4px}

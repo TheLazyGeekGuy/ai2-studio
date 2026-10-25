@@ -1,4 +1,4 @@
-// Aligned workstation of the Korg AI² editors (validated mockup of 24/10/2026, forge #98–#103): for the native X5DR and
+// Aligned workstation of the Korg AI² editors (validated mockup of 24/10/2026): for the native X5DR and
 // for all 21 file models, every parameter lands in exactly one card, VDF / VDA and their envelopes share a row, and the
 // model slider can carry every model id. Pure layout: no DOM, no MIDI.
 import assert from 'node:assert/strict'

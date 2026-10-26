@@ -11,6 +11,7 @@ export function ai2PortModel(name:string|null|undefined):string|null{
   const id=compact(m.id),index=text.indexOf(id);return index>=0&&!/[0-9]/.test(text[index-1]??'')&&!/[0-9]/.test(text[index+id.length]??'')
  })
  if(/x5[^\r\n]*dr/i.test(raw))return 'X5DR'
+ if(!exact){const n=/(?:^|[^0-9])(?:n[\s_./-]*)?(264|364)(?![0-9])/i.exec(raw);if(n)return 'N'+n[1]}
  return exact?.id??null
 }
 export interface PortChoice {id:string;name:string}
@@ -25,7 +26,7 @@ export function ai2MidiPreferences(storage:PreferenceStorage|undefined,key:strin
 export function resolveMidiChoice(ports:Map<string,MidiPort>,choice:PortChoice|undefined,available:(id:string)=>boolean){
  if(!choice)return null
  const candidates=[...ports.values()].filter(p=>p.state==='connected'&&available(p.id))
- const sameName=(name:string|null|undefined)=>(name??'').normalize('NFKC').trim().toLowerCase()===choice.name.normalize('NFKC').trim().toLowerCase()
+ const sameName=(name:string|null|undefined)=>compact(name??'')===compact(choice.name)
  const byId=candidates.find(p=>p.id===choice.id&&sameName(p.name));if(byId)return byId
  const byName=candidates.filter(p=>sameName(p.name));return byName.length===1?byName[0]:null
 }

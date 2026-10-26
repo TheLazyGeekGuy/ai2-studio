@@ -29,3 +29,5 @@
 .ai2-library table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}.ai2-library th,.ai2-library td{padding:12px 10px;border-bottom:1px solid var(--theme-line);vertical-align:top}.ai2-library th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--theme-muted)}
 
 .x5dr-editor .x5-library.ai2-library-dialog>.ai2-library{flex:1;min-height:0;overflow:auto}
+
+.ai2-midi-dialog{width:min(980px,95vw)!important}.ai2-midi-dialog .ai2-midi-connection{border:0}.ai2-files-drawer{padding:16px 0;border-block:1px solid var(--theme-line)}.ai2-workbench>.x5-toolbar{margin-top:10px}.ai2-workbench>.ai2-draft-status{display:none}

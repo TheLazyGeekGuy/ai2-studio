@@ -3,8 +3,8 @@
 Éditeur et librairie dans le navigateur pour la famille de synthèse Korg AI², sur l'hôte MIDI Studio.
 
 - **X5DR** : éditeur natif avec édition matérielle par MIDI (Program, Combination, Multi, Drums, Global), envoi live, édition automatique, librairie et banques.
-- **Les 20 autres modèles AI²** (série 01/W, 03R/W, 05R/W, X2, X3, X3R, X5, X5D, N264, N364, NS5R, NX5R, N5, N5EX, N1, N1R) : édition de fichiers (SysEx, espace de travail JSON), conversion hors ligne entre modèles, édition des Combis, routage clavier / contrôleur. L'édition matérielle de ces modèles n'est pas activée.
-- Un même poste de travail pour tous les modèles : curseur de modèle, colonnes d'oscillateur alignées (Source / VDF / VDA puis leurs enveloppes), enveloppes déplaçables, barre d'outils unique, un seul panneau de connexion MIDI et un tiroir bas (moniteur, jeu au clavier, A/B, fichiers, présentation).
+- **Les 20 autres modèles AI²** : interfaces et éditeurs Program/Combi actifs, paramètres complets, MIDI Live avec relecture, banques, écriture mémoire utilisateur explicite, Global/kits et objets propres aux familles. Les générations NS5R/N5 ajoutent les FX et Multi/Performances séparés, leurs banques et leur écriture. Les tests utilisent des instruments simulés ; **la validation matérielle est confiée aux utilisateurs**, sans désactiver les pilotes.
+- Un même poste de travail pour tous les modèles : frise de modèles et graphe cliquable des variantes/compatibilités, colonnes d'oscillateur alignées (Source / VDF / VDA puis leurs enveloppes), enveloppes déplaçables, barre d'outils unique, un seul panneau de connexion MIDI et un tiroir bas (moniteur, jeu au clavier, A/B, fichiers, présentation).
 
 ```sh
 npm install
@@ -13,4 +13,6 @@ npm test           # suites hors ligne + vérification des types
 npm run build      # dist/, utilisable sous n'importe quel sous-chemin
 ```
 
-Aucun STORE matériel n'est envoyé : les modifications vont dans le buffer d'édition volatil. Les brouillons et la librairie restent dans ce navigateur (IndexedDB).
+L’édition Live utilise les buffers temporaires. Les réglages Global/anciens kits demandent Appliquer ; l’enregistrement en mémoire utilisateur utilise une action explicite et une relecture de la banque. Aucun STORE automatique. Les brouillons et la librairie sont conservés dans ce navigateur (IndexedDB).
+
+[État des lieux et matrice de qualification](docs/EXPANSION-20261025.md). Les façades sont des reconstructions propres aux modèles ; plusieurs variantes restent à qualifier visuellement. Les conversions entre familles documentent leurs correspondances partielles et conservent les sources, sans promettre une identité sonore.

@@ -1,3 +1,4 @@
+import {translate as uiTranslate,useLanguage as useUiLanguage} from '../i18n'
 import {useEffect,useLayoutEffect,useMemo,useRef,useState,useSyncExternalStore} from 'react'
 import type {ControlActivity} from './interaction-feedback'
 import {createPresentationPreferences,type PresentationInstance} from './presentation-preferences'
@@ -12,7 +13,7 @@ export function usePresentationSettings(store?:PresentationInstance){
  return {preferences,settings}
 }
 /** Non-overlapping activity band and optional inline/floating screens. Never sends MIDI. */
-export function PresentationTools({preferences,activity,screens=[],readoutClassName=''}:{preferences?:PresentationInstance;activity?:ControlActivity|null;screens?:readonly EditorScreen[];readoutClassName?:string}){
+export function PresentationTools({preferences,activity,screens=[],readoutClassName=''}:{preferences?:PresentationInstance;activity?:ControlActivity|null;screens?:readonly EditorScreen[];readoutClassName?:string}){const uiLanguage=useUiLanguage();
  const {preferences:store,settings}=usePresentationSettings(preferences),language=useLanguage(),t=(s:string)=>translate(s,language)
  const [expanded,setExpanded]=useState(false),[screenId,setScreenId]=useState(''),[error,setError]=useState(''),[floating,setFloating]=useState(false)
  const canvas=useRef<HTMLCanvasElement>(null),screen= screens.find(s=>s.id===screenId)??screens[0]
@@ -35,12 +36,12 @@ export function PresentationTools({preferences,activity,screens=[],readoutClassN
   }catch(e){if(alive.current&&!controller.signal.aborted)setError(String(e))}finally{if(pending.current===controller)pending.current=null}
  }
  return <section className="sp-tools">
-  {activity&&<div className={`sp-activity ${readoutClassName}`} data-zoom={settings.activeZoom&&activity.source!=='selection'||undefined} aria-live="off"><span>{activity.label}</span><output>{activity.value??'—'}</output><small>{activity.source}</small></div>}
+  {activity&&<div className={`sp-activity ${readoutClassName}`} data-zoom={settings.activeZoom&&activity.source!=='selection'||undefined} aria-live="off"><span>{uiTranslate(activity.label,uiLanguage)}</span><output>{activity.value??'—'}</output><small>{activity.source}</small></div>}
   <details open={expanded} onToggle={e=>setExpanded(e.currentTarget.open)}><summary>{t('Presentation')}</summary>
    <div className="sp-options"><label><input type="checkbox" checked={settings.activeZoom} onChange={e=>store.set({activeZoom:e.target.checked})}/>{t('Zoom while adjusting')}</label><button onClick={()=>store.reset()}>{t('Use global presentation')}</button>
-   {!!screens.length&&<><label>{t('Screen')}<select aria-label={t('Screen')} value={screen?.id??''} onChange={e=>setScreenId(e.target.value)}>{screens.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select></label><label>{t('Screen scale')}<input aria-label={t('Screen scale')} type="range" min="1" max="3" step="0.25" value={settings.screenScale} onChange={e=>store.set({screenScale:Number(e.target.value)})}/>{settings.screenScale}×</label><button disabled={!floatingScreenSupported()} onClick={()=>void toggle()} title={!floatingScreenSupported()?t('Floating screen unavailable in this browser'):undefined}>{t(floating?'Close floating display':'Floating display')}</button></>}
-   </div>{expanded&&screen&&<canvas className="sp-screen" ref={canvas} width={screen.width} height={screen.height} style={{width:`${screen.width*settings.screenScale}px`}} role="img" aria-label={screen.label}/>}
-   {error&&<p role="status">{error}</p>}
+   {!!screens.length&&<><label>{t('Screen')}<select aria-label={t('Screen')} value={screen?.id??''} onChange={e=>setScreenId(e.target.value)}>{screens.map(s=><option key={s.id} value={s.id}>{uiTranslate(s.label,uiLanguage)}</option>)}</select></label><label>{t('Screen scale')}<input aria-label={t('Screen scale')} type="range" min="1" max="3" step="0.25" value={settings.screenScale} onChange={e=>store.set({screenScale:Number(e.target.value)})}/>{settings.screenScale}{"×"}</label><button disabled={!floatingScreenSupported()} onClick={()=>void toggle()} title={!floatingScreenSupported()?t('Floating screen unavailable in this browser'):undefined}>{t(floating?'Close floating display':'Floating display')}</button></>}
+   </div>{expanded&&screen&&<canvas className="sp-screen" ref={canvas} width={screen.width} height={screen.height} style={{width:`${screen.width*settings.screenScale}px`}} role="img" aria-label={uiTranslate(screen.label,uiLanguage)}/>}
+   {error&&<p role="status">{uiTranslate(error,uiLanguage)}</p>}
   </details>
  </section>
 }

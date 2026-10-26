@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict'
+import {build} from 'esbuild'
+import {mkdtempSync,writeFileSync,readFileSync,rmSync} from 'node:fs'
+import {tmpdir} from 'node:os'
+import path from 'node:path'
+import vm from 'node:vm'
+const bundle=await build({stdin:{contents:"export * from './src/app-update';export * from './src/update-safety';export * from './build/offline.mts'",resolveDir:process.cwd()},bundle:true,write:false,platform:'node',format:'esm'})
+const m=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64')),dir=mkdtempSync(path.join(tmpdir(),'ai2-update-'))
+try{
+ writeFileSync(path.join(dir,'index.html'),'<html><head></head><body>A</body></html>');writeFileSync(path.join(dir,'app.js'),'console.log("A")');const template=readFileSync('build/offline-worker.js','utf8');m.buildOfflineCache(dir,template);const a=JSON.parse(readFileSync(path.join(dir,'app-version.json')));assert.equal(m.parseAppVersion(a).build.length,24);m.buildOfflineCache(dir,template);assert.equal(JSON.parse(readFileSync(path.join(dir,'app-version.json'))).build,a.build,'Build content id must be deterministic');assert.equal((readFileSync(path.join(dir,'index.html'),'utf8').match(/name="ai2-build"/g)||[]).length,1)
+ const base=new URL('https://app.test/ai2/'),request=async url=>{const parsed=new URL(url);assert.equal(parsed.searchParams.get('__update'),a.build);return new Response(readFileSync(path.join(dir,path.basename(parsed.pathname))))};await m.verifyAppVersion(a,base,request)
+ await assert.rejects(()=>m.verifyAppVersion(a,base,async()=>new Response('wrong data')))
+ for(const unsafe of ['../private','/outside','https://other.test/code','assets/a.js?q=1'])assert.throws(()=>m.parseAppVersion({...a,assets:[...a.assets,{url:unsafe,integrity:a.assets[0].integrity}]}))
+ let safe=false,loads=0,verifies=0,saved=0,reloads=0;const order=[],u=m.createAppUpdater({current:'0'.repeat(24),load:async()=>{loads++;return a},verify:async()=>{verifies++},safe:async()=>{if(!safe)return false;await Promise.resolve();saved++;order.push('saved');return true},activate:async()=>{order.push('activated');return true},reload:()=>{assert.equal(saved,2);order.push('reload');reloads++}})
+ await u.check();assert.equal(u.getSnapshot().phase,'waiting');assert.equal(reloads,0);safe=true;await u.check(false);assert.equal(loads,1);assert.equal(verifies,1);assert.deepEqual(order,['saved','activated','saved','reload']);await u.check();assert.equal(reloads,1)
+ const failed=m.createAppUpdater({current:'0'.repeat(24),load:async()=>a,verify:async()=>{},safe:async()=>{throw Error('Storage full')},activate:async()=>true,reload:()=>{throw Error('Must not reload')}});await failed.check();assert.equal(failed.getSnapshot().phase,'error')
+ const blocked=m.registerUpdateGuard(()=>false);assert.equal(await m.checkpointForUpdate(a.build),false);blocked();assert.equal(await m.checkpointForUpdate(a.build),true)
+ const storage={getItem:()=>JSON.stringify({version:1,build:a.build,state:{draft:'preserved'}})};assert.deepEqual(m.readUpdateSession(storage,'id',a.build,a.build),{draft:'preserved'});assert.equal(m.readUpdateSession(storage,'id',a.build,'1'.repeat(24)),undefined)
+ const perTab=new Map(),tabStore={getItem:k=>perTab.get(k)??null,setItem:(k,v)=>perTab.set(k,v)};m.rememberUpdateInstance(tabStore,'editor','/scope/','own-instance',a.build);assert.equal(m.readUpdateInstance(tabStore,'editor','/scope/',a.build),'own-instance');assert.equal(m.readUpdateInstance(tabStore,'editor','/other/',a.build),undefined);assert.equal(m.readUpdateInstance(tabStore,'editor','/scope/','0'.repeat(24)),undefined)
+ // Execute the emitted worker: activation retains old assets until all page clients acknowledge the new build.
+ const handlers={},map=new Map(),prefix='bcr-studio-offline:'+encodeURIComponent('/ai2/')+':',old=prefix+'old',foreign='other-app-cache',cacheFor=key=>({async match(url){return map.get(key)?.get(String(url))?.clone()},async put(url,response){map.get(key).set(String(url),response.clone())}}),caches={async keys(){return [...map.keys()]},async open(key){if(!map.has(key))map.set(key,new Map());return cacheFor(key)},async delete(key){return map.delete(key)}};map.set(old,new Map([['https://app.test/ai2/assets/old.js',new Response('old code')]]));map.set(foreign,new Map());let skips=0
+ const self={registration:{scope:base.href},clients:{async matchAll(){return [{id:'old-tab'},{id:'new-tab'}]},async claim(){}},async skipWaiting(){skips++},addEventListener:(type,fn)=>handlers[type]=fn}
+ vm.runInNewContext(readFileSync(path.join(dir,'sw.js'),'utf8'),{self,caches,URL,Request,Response,fetch:async request=>new Response(readFileSync(path.join(dir,path.basename(new URL(request.url).pathname))))})
+ const event=async(type,extra={})=>{const work=[];handlers[type]({...extra,waitUntil:p=>work.push(p)});await Promise.all(work)}
+ await event('install');await event('activate');assert.ok(map.has(old));await event('message',{data:{type:'ACTIVATE_UPDATE',build:'bad'}});assert.equal(skips,0);await event('message',{data:{type:'ACTIVATE_UPDATE',build:a.build},ports:[{postMessage(){}}]});assert.equal(skips,1)
+ let oldResponse;handlers.fetch({request:new Request('https://app.test/ai2/assets/old.js'),respondWith:p=>oldResponse=p});assert.equal(await(await oldResponse).text(),'old code')
+ await event('message',{data:{type:'BUILD_ACTIVE',build:a.build},source:{id:'new-tab'}});assert.ok(map.has(old));await event('message',{data:{type:'BUILD_ACTIVE',build:a.build},source:{id:'old-tab'}});assert.equal(map.has(old),false);assert.ok(map.has(foreign))
+ let intercepted=false;handlers.fetch({request:new Request('https://app.test/ai2/app-version.json?t=1'),respondWith:()=>intercepted=true});assert.equal(intercepted,false)
+ console.log('PASS application update: deterministic content version, full deployment integrity, single reload after awaited checkpoints, pending work/storage failure defer, session recovery, exact worker activation, old-tab asset retention and scoped cache cleanup; no MIDI')
+}finally{rmSync(dir,{recursive:true,force:true})}

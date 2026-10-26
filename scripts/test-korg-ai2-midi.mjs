@@ -4,6 +4,7 @@ const bundle=await build({stdin:{contents:"export * from './src/instrument-famil
 const m=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64'))
 for(const model of m.ai2Models)assert.equal(m.ai2PortModel('Network KoRg '+model.id+' MIDI IN'),model.id,model.id)
 for(const name of ['KORG x5 (mioXL) dR','x5___DR','Network X5DR'])assert.equal(m.ai2PortModel(name),'X5DR')
+for(const [name,expected]of [['Korg264','N264'],['mio364','N364'],['n-264','N264'],['n_364','N364'],['264 IN','N264'],['Network 364 OUT','N364'],['N 264','N264'],['n / 364','N364']])assert.equal(m.ai2PortModel(name),expected,name)
 for(const name of ['FireworX','N12','01/W123','x5\nDR',''])assert.equal(m.ai2PortModel(name),null,name)
 const memory=new Map(),storage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v)},prefs=m.ai2MidiPreferences(storage,'first')
 assert.deepEqual(prefs.get(),{version:1,channel:1,enabled:true,autoLive:true,autoEdit:true})
@@ -18,3 +19,5 @@ access.outputs.clear();access.outputs.set('other',port('other','Another X5DR OUT
 memory.set('corrupt','{"version":1,"channel":99,"input":{"id":12}}');assert.equal(m.ai2MidiPreferences(storage,'corrupt').get().channel,1)
 const blocked=m.ai2MidiPreferences({getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}},'x');blocked.update({channel:5});assert.equal(blocked.get().channel,5)
 console.log('PASS AI² MIDI: 21 model names, X5 wildcard DR, exact/renamed routes, ambiguity, reservations, isolated preferences and storage failure; no MIDI')
+
+assert.equal(m.resolveMidiChoice(new Map([['new',port('new','Network n-264 IN')]]),{id:'old',name:'Network N264 IN'},()=>true)?.id,'new','Remembered route tolerates model punctuation without changing instruments')

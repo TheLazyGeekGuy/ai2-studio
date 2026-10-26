@@ -12,7 +12,7 @@ const maxResources=(id:string)=>ai2Model(id).multisamples
 /** All conversions are offline. No transport, store command or implicit template. */
 export function convertProgram(source:Ai2Program,template:Ai2Program,rules:ResourceRules,options:ConversionOptions={}):ConversionResult{
  const s=validateProgram(source),t=validateProgram(template),sm=ai2Model(s.model),tm=ai2Model(t.model),events:ConversionEvent[]=[],same=s.model===t.model,sameLayout=sm.protocol===tm.protocol
- if(same)return {program:validateProgram({...s,channel:t.channel,original:[]}),source:s,events:[{field:'program',status:'STRUCTURE_PRESERVEE',detail:'Données décodées conservées octet pour octet ; canal cible explicite.'}],status:'STRUCTURE_PRESERVEE',hardwareValidated:false,pcmIdentityClaimed:false}
+ if(same)return {program:validateProgram({...s,origin:undefined,channel:t.channel,original:[]}),source:s,events:[{field:'program',status:'STRUCTURE_PRESERVEE',detail:'Données décodées conservées octet pour octet ; canal cible explicite.'}],status:'STRUCTURE_PRESERVEE',hardwareValidated:false,pcmIdentityClaimed:false}
  const newRoute=sm.protocol==='NS5R'&&tm.protocol==='N5'||sm.protocol==='N5'&&tm.protocol==='NS5R'
  const priorRoute=['01W','03RW'].includes(sm.protocol)&&['X5','X3'].includes(tm.protocol)
  const log=(field:string,status:string,from:unknown,to:unknown,detail:string)=>events.push({field,status,source:from,target:to,detail})
@@ -63,7 +63,7 @@ export function convertProgram(source:Ai2Program,template:Ai2Program,rules:Resou
    const sb=sm.protocol==='NS5R'?14+72*osc:22+78*osc,db=tm.protocol==='NS5R'?14+72*osc:22+78*osc
    data.splice(db,72,...s.data.slice(sb,sb+72))
    if(tm.protocol==='NS5R'){
-    for(const rel of [14,28,53,57,33,37])if(signed8(s.data[sb+rel])<0){data[db+rel]=0;log('osc'+(osc+1)+'.byte'+rel,'SATURATION',signed8(s.data[sb+rel]),0,'Modulation signée N5 non représentable dans le dump NS5R.')}
+    for(const rel of [14,28,53])if(signed8(s.data[sb+rel])<0){data[db+rel]=0;log('osc'+(osc+1)+'.byte'+rel,'SATURATION',signed8(s.data[sb+rel]),0,'Modulation signée N5 non représentable dans le dump NS5R.')}
     if(s.data[sb+69]===128){data[db+69]=64;data[db+3]=0;log('osc'+(osc+1)+'.panOff','ADAPTE',128,0,'Pan Off N5 rendu silencieux ; pas de confusion avec Random.')}
    }
   }

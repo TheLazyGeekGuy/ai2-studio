@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import {build} from 'esbuild'
 import {mkdirSync,writeFileSync} from 'node:fs'
 import os from 'node:os'
-const bundle=await build({stdin:{contents:`export * from './src/editors/korg-x5dr/library-model';export * from './src/editors/korg-x5dr/model';export * from './src/library/memory-storage';export * from './src/library/storage';export * from './src/library/metadata';export * from './src/library/archive';export * from './src/library/midi-files';`,resolveDir:process.cwd()},bundle:true,write:false,platform:'node',format:'esm',metafile:true})
+const bundle=await build({stdin:{contents:`export * from './src/editors/korg-x5dr/library-model';export * from './src/editors/korg-x5dr/saved-program-names';export * from './src/instrument-families/korg-ai2/dump-codec';export * from './src/editors/korg-x5dr/model';export * from './src/library/memory-storage';export * from './src/library/storage';export * from './src/library/metadata';export * from './src/library/archive';export * from './src/library/midi-files';`,resolveDir:process.cwd()},bundle:true,write:false,platform:'node',format:'esm',metafile:true})
 assert.ok(!Object.keys(bundle.metafile.inputs).some(p=>p.endsWith('.tsx')||p.includes('node_modules')),'Librarian model is headless/inert')
 const m=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64')),db=m.createMemoryLibrary()
 const named=(name,cutoff,mode=0,fx=0)=>{let s=m.withParameter(m.initialState(),50,cutoff);s=m.withParameter(s,10,mode);s=m.withParameter(s,1135,fx);const data=[...s.data];[...name.padEnd(10)].forEach((c,i)=>data[i]=c.charCodeAt(0));return m.validateState({...s,data})}
@@ -65,3 +65,10 @@ writeFileSync('output/research/x5dr-library/test-programs.syx',syx)
 writeFileSync('output/research/x5dr-library/test-library.json',archive)
 db.close();restored.close();perfDb.close()
 console.log('PASS X5DR library: original SYX/SMF/JSON, strict model/schema, archive/hash/atomic restore, mixed packets, cancellation, classification/Unicode/favorites/effects, duplicate views, drag refs, ordered/repeated banks; 5000 projection '+projectionMs.toFixed(1)+' ms / cached '+cachedMs.toFixed(2)+' ms / query p95 '+p95.toFixed(2)+' ms; no MIDI')
+
+// Reopening with only the saved original bank must restore timbre labels; arbitrary preset files do not count.
+const savedBank=m.createMemoryLibrary(),bankCodec=m.createAi2DumpCodec({modelId:54,functionId:76,recordSize:164,minRecords:100,maxRecords:100,selector:[0],label:'X5DR complete bank'}),bankData=Array.from({length:100},(_,i)=>named('Saved'+i,10).data).flat(),reopenedBankBytes=new Uint8Array(bankCodec.encode(1,bankData));
+await m.importLibraryFile(savedBank,'x5dr-program-bank.syx',reopenedBankBytes,m.readLibraryFile)
+const labels=await m.loadProgramNames('reopen-test',async()=>savedBank);assert.equal(labels.names[88],'Saved88');assert.equal(labels.names[82],'Saved82');assert.equal(labels.names[48],'Saved48');assert.equal(Object.keys(labels.names).length,100)
+assert.deepEqual(m.validProgramNames({'88':'Saved88','100':'bad','-1':'bad',oops:'no',0:'12345678901'}),{88:'Saved88'})
+console.log('PASS restored local Program bank names: A88/A82/A48, strict complete original, no MIDI')

@@ -1,3 +1,6 @@
+import {ai2ExtraRows,ai2ModelRows,ai2BackupRows,ai2ParameterRows} from './i18n-ai2-extra'
+import {ai2LocaleRows} from './i18n-ai2-locales'
+import {ai2French,ai2SourceAliases} from './i18n-ai2'
 import { Fragment, cloneElement, createContext, isValidElement, useContext, useEffect, useState, type ReactNode, type ReactElement } from 'react'
 import { statusRows } from './i18n-status'
 import { xtouchRows } from './i18n-xtouch'
@@ -430,18 +433,23 @@ const rows = [
   'Footswitches and preset keys|Pédales et touches de preset|Pedali e tasti preset|Fußschalter und Preset-Tasten|フットスイッチとプリセットキー|Pedales y teclas de preset|Педали и кнопки пресетов|脚踏开关和预置键',
 ]
 const codes = ['en', 'fr', 'it', 'de', 'ja', 'es', 'ru', 'zh'] as const
-export const catalog = Object.fromEntries([...rows, ...statusRows, ...xtouchRows,...translatorRows,...offlineRows,...libraryRows].map(row => { const parts = row.split('|'); return [parts[0], Object.fromEntries(codes.map((code, i) => [code, parts[i]]))] })) as Record<string, Record<Language, string>>
+export const catalog = Object.fromEntries([...rows, ...statusRows, ...xtouchRows,...translatorRows,...offlineRows,...libraryRows,...ai2ExtraRows,...ai2ModelRows,...ai2BackupRows,...ai2ParameterRows].map(row => { const parts = row.split('|'); return [parts[0], Object.fromEntries(codes.map((code, i) => [code, parts[i]]))] })) as Record<string, Record<Language, string>>
+for (const [en,fr] of Object.entries(ai2French)) catalog[en]={...Object.fromEntries(codes.map(code=>[code,en])),...catalog[en],en,fr} as Record<Language,string>
+for(const [key,...values] of ai2LocaleRows) for(const [i,code] of (['it','de','ja','es','ru','zh'] as const).entries()) catalog[key][code]=values[i]
+const sourceAliases:Record<string,string>={...Object.fromEntries(Object.entries(catalog).map(([en,row])=>[row.fr,en])),...ai2SourceAliases}
+const caseKeys=new Map(Object.keys(catalog).map(key=>[key.toLocaleLowerCase('en'),key]))
 const patterns = Object.keys(catalog).filter(key => key.includes('{')).sort((a, b) => b.length - a.length).map(key => {
   const slots = [...key.matchAll(/\{(name|count|detail|file|device)\}/g)].map(m => m[1])
   const escaped = key.split(/\{(?:name|count|detail|file|device)\}/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-  return { key, slots, regex: new RegExp('^' + escaped.join('(.+?)') + '$') }
+  const source=catalog[key].fr.split(/\{(?:name|count|detail|file|device)\}/).map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))
+  return { key, slots, regex: new RegExp('^' + escaped.join('(.+?)') + '$'), sourceRegex:new RegExp('^'+source.join('(.+?)')+'$') }
 })
 export function translate(text: string, language: Language): string {
-  if (language === 'en') return text
-  const trimmed = text.trim(), entry = catalog[trimmed]
+  const trimmed = text.trim(), key = catalog[trimmed] ? trimmed : sourceAliases[trimmed]??caseKeys.get(trimmed.toLocaleLowerCase('en')), entry = catalog[key]
+  if (!trimmed) return text
   if (entry) return text.replace(trimmed, entry[language])
-  for (const { key, slots, regex } of patterns) {
-    const match = regex.exec(trimmed)
+  for (const { key, slots, regex, sourceRegex } of patterns) {
+    const match = regex.exec(trimmed) ?? sourceRegex.exec(trimmed)
     if (!match) continue
     const result = catalog[key][language].replace(/\{(name|count|detail|file|device)\}/g, (_all, slot: string) => {
       const value = match[slots.indexOf(slot) + 1]
@@ -449,12 +457,14 @@ export function translate(text: string, language: Language): string {
     })
     return text.replace(trimmed, result)
   }
+  const synthGroup=/^(OSC [12]|FX [12]|Timbre \d+) (.+)$/.exec(trimmed)
+  if(synthGroup)return text.replace(trimmed,synthGroup[1]+' '+translate(synthGroup[2],language))
   // Preserve values/identifiers in dynamic headings; no substring replacement in user labels.
   const prefix = /^(Encoder|Button|Push|Fader|Name|Parameter names ·|Import) (\d+|CC \d+|NRPN \d+|GS \d+)(.*)$/.exec(trimmed)
   return prefix ? `${catalog[prefix[1]]?.[language] || prefix[1]} ${prefix[2]}${prefix[3]}` : text
 }
 export function translatedTree(node: ReactNode, language: Language): ReactNode {
-  if (language === 'en') return node // translate() is the identity in English: no need to clone the tree.
+  if (language === 'en') return node // Legacy trees use English source; preserve opaque rendered data. AI² views translate UI-owned messages explicitly.
   if (typeof node === 'string') return translate(node, language)
   if (Array.isArray(node)) return node.map(n => translatedTree(n, language))
   if (!isValidElement(node) || typeof node.type !== 'string' && node.type !== Fragment) return node

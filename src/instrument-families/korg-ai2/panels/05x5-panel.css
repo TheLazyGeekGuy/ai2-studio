@@ -1,0 +1,3 @@
+.ai2-05x5-panel{display:block;width:100%;height:auto}.ai2-05x5-panel .x5-panel-hit{width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}.ai2-05x5-panel .x5-panel-hit:focus-visible{opacity:1;background:transparent;outline:2px solid #d7dfef;outline-offset:-3px}
+
+.ai2-midi-led{filter:drop-shadow(0 0 2px #ff473d);transition:opacity .05s}@media(prefers-reduced-motion:reduce){.ai2-midi-led{transition:none}}

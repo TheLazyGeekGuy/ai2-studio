@@ -120,7 +120,7 @@
           "rich"
         ],
         "defaults": {
-          "theme": "graphite",
+          "theme": "porcelain",
           "layout": "studio",
           "surface": "hardware",
           "render": "flat"

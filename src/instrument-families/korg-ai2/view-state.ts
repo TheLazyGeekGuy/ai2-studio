@@ -1,5 +1,5 @@
 import {ai2Model} from './models'
 export interface Ai2ViewState {kind?:'program'|'combination';section:string;editing:boolean;fieldIndex:number}
-export const ai2Sections=['Programmes','OSC 1','OSC 2','Ressources','Librairie','Conversion','Compatibilité'] as const
+export const ai2Sections=['Programmes','OSC 1','OSC 2','Paramètres','Effets','Ressources','Librairie','Conversion','Compatibilité'] as const
 export const initialAi2View:Ai2ViewState=Object.freeze({section:'Programmes',editing:false,fieldIndex:0})
 export function validateAi2Views(raw:unknown):Record<string,Ai2ViewState>{if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Invalid AI² view state');const result:Record<string,Ai2ViewState>={};for(const [id,view]of Object.entries(raw)){ai2Model(id);const v=view as Ai2ViewState;if(!v||!ai2Sections.includes(v.section as typeof ai2Sections[number])||typeof v.editing!=='boolean'||!Number.isInteger(v.fieldIndex)||v.fieldIndex<0||v.fieldIndex>1000)throw Error('Invalid AI² editor view');if(v.kind!==undefined&&!['program','combination'].includes(v.kind))throw Error('Invalid object kind');result[id]={...(v.kind?{kind:v.kind}:{}),section:v.section,editing:v.editing,fieldIndex:v.fieldIndex}}return result}

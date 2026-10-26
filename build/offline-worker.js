@@ -9,6 +9,12 @@ const URLS = new Set(ENTRIES.map(entry => new URL(entry.url, SCOPE).href))
 const REQUIRED = PRECACHE === null ? ENTRIES : ENTRIES.filter(entry => PRECACHE.includes(entry.url))
 const INDEX = new URL('index.html', SCOPE).href
 let preparing = null
+const reportedBuilds = new Set()
+async function prune() {
+  const clients = await self.clients.matchAll({type:'window'})
+  if (clients.some(client=>!reportedBuilds.has(client.id))) return
+  for (const key of await caches.keys()) if (key.startsWith(PREFIX) && key !== CACHE) await caches.delete(key)
+}
 
 async function ready() {
   const cache = await caches.open(CACHE)
@@ -30,16 +36,18 @@ async function prepare() {
   return preparing
 }
 self.addEventListener('install', event => {
-  // No skipWaiting: a new build must not take over an editor/USB MIDI session in progress.
+  // Installation prepares an integrity-checked build. Activation is requested only after page checkpoints.
   event.waitUntil(prepare().catch(async error => { await caches.delete(CACHE); throw error }))
 })
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
-    for (const key of await caches.keys()) if (key.startsWith(PREFIX) && key !== CACHE) await caches.delete(key)
+    // Old tabs may still be checkpointing. Their assets remain until every controlled client reports this build.
     await self.clients.claim()
   })())
 })
 self.addEventListener('message', event => {
+  if(event.data?.type==='BUILD_ACTIVE' && event.data.build===BUILD_ID && event.source?.id){reportedBuilds.add(event.source.id);event.waitUntil(prune());return}
+  if(event.data?.type==='ACTIVATE_UPDATE' && event.data.build===BUILD_ID){event.waitUntil((async()=>{if(!await ready())return;event.ports[0]?.postMessage({type:'UPDATE_ACTIVATING',build:BUILD_ID});await self.skipWaiting()})());return}
   if (!['STATUS', 'PREPARE'].includes(event.data?.type)) return
   event.waitUntil((async () => {
     try {
@@ -56,6 +64,7 @@ self.addEventListener('message', event => {
         }))
       }
       event.ports[0]?.postMessage({type:'OFFLINE_STATUS',ready:await ready(),build:BUILD_ID})
+      if(event.data.type==='STATUS')await prune()
     } catch { event.ports[0]?.postMessage({type:'OFFLINE_STATUS',ready:false,build:BUILD_ID}) }
   })())
 })
@@ -63,7 +72,10 @@ self.addEventListener('fetch', event => {
   const request = event.request, url = new URL(request.url)
   if (request.method !== 'GET' || url.origin !== SCOPE.origin) return
   const navigation = request.mode === 'navigate' && [SCOPE.pathname, new URL(INDEX).pathname].includes(url.pathname)
-  if (!navigation && !URLS.has(url.href)) return // Never cache APIs, arbitrary requests, uploads or external sites.
+  if (!navigation && !URLS.has(url.href)) {
+    if(url.pathname.startsWith(new URL('assets/',SCOPE).pathname))event.respondWith((async()=>{for(const key of await caches.keys())if(key.startsWith(PREFIX)){const cached=await(await caches.open(key)).match(url.href);if(cached)return cached}return fetch(request)})())
+    return // Version probes, APIs and arbitrary requests remain network-only.
+  }
   event.respondWith((async () => {
     const cache = await caches.open(CACHE), cached = await cache.match(navigation ? INDEX : url.href)
     if (cached) return cached // Pin HTML and used chunks to this build, online as well as offline.

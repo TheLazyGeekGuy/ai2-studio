@@ -2,7 +2,7 @@ import type { MidiAccess, MidiPort } from '../web-midi'
 import { validVoiceMessage } from '../bcontrol-voice'
 import {validMidiMessage as validMessage} from '../midi-message'
 
-export type MidiOperation = 'value' | 'query' | 'brightness' | 'feedback' | 'device-control' | 'edit-buffer' | 'preset-store'
+export type MidiOperation = 'value' | 'query' | 'brightness' | 'feedback' | 'device-control' | 'edit-buffer' | 'preset-store' | 'device-settings'
 export type MidiAuthorization = Readonly<{ operation: MidiOperation }>
 export interface EndpointBinding { inputId: string; outputId: string }
 export interface BrokerPacket { inputId: string; generation: number; timestamp: number; bytes: number[] }
@@ -32,6 +32,7 @@ type InternalLease = {
   validateDeviceControl: (bytes: readonly number[]) => boolean
   validateEditBuffer: (bytes: readonly number[]) => boolean
   validatePresetStore: (bytes: readonly number[]) => boolean
+  validateDeviceSettings: (bytes: readonly number[]) => boolean
   offInput?:()=>void
   activity: Set<(activity: MidiActivity) => void>
   presence: MidiPresence; presenceListeners: Set<(presence: MidiPresence) => void>
@@ -39,7 +40,7 @@ type InternalLease = {
 const copyState = (s: LeaseState): LeaseState => ({ ...s, binding: s.binding ? { ...s.binding } : null })
 
 // Host-owned transport only. No permissions requested, port auto-selection, sends, timers or physical writes at construction.
-// Device-control is optional and exact-validator gated. Configuration/STORE/firmware/reset remain unavailable.
+// Device-control is optional and exact-validator gated. Settings require a separate exact validator and explicit grant; STORE/firmware/reset remain separately gated.
 export function createMidiBroker(access: MidiAccess, now = () => performance.now()) {
   const leases = new Map<string, InternalLease>()
   const inputOwners = new Map<string, string>(), outputOwners = new Map<string, string>()
@@ -94,10 +95,10 @@ export function createMidiBroker(access: MidiAccess, now = () => performance.now
   return {
     available(direction: 'input' | 'output', id: string, owner: string) { const reserved = (direction === 'input' ? inputOwners : outputOwners).get(id); return !closed && (reserved === undefined || reserved === owner) },
     subscribe(fn: () => void) { if (closed) throw Error('MIDI broker closed'); observers.add(fn); return () => { observers.delete(fn) } },
-    createLease(owner: string, validateQuery: InternalLease['validateQuery'] = () => false, validateBrightness: InternalLease['validateBrightness'] = () => false, validateFeedback: InternalLease['validateFeedback'] = () => false, validateDeviceControl: InternalLease['validateDeviceControl'] = () => false, validateEditBuffer: InternalLease['validateEditBuffer'] = () => false, validatePresetStore: InternalLease['validatePresetStore'] = () => false): MidiLease {
+    createLease(owner: string, validateQuery: InternalLease['validateQuery'] = () => false, validateBrightness: InternalLease['validateBrightness'] = () => false, validateFeedback: InternalLease['validateFeedback'] = () => false, validateDeviceControl: InternalLease['validateDeviceControl'] = () => false, validateEditBuffer: InternalLease['validateEditBuffer'] = () => false, validatePresetStore: InternalLease['validatePresetStore'] = () => false, validateDeviceSettings:InternalLease['validateDeviceSettings']=()=>false): MidiLease {
       if (closed || !/^[a-zA-Z0-9_-]{1,100}$/.test(owner) || leases.has(owner)) throw Error('Invalid or duplicate MIDI lease owner')
       const l: InternalLease = { state: { connected: false, generation: 0, binding: null, error: null }, input: null,
-        output: null, listener: null, disposed: false, packets: new Set(), states: new Set(), activity: new Set(), presence: null, presenceListeners: new Set(), validateQuery, validateBrightness, validateFeedback, validateDeviceControl, validateEditBuffer, validatePresetStore }
+        output: null, listener: null, disposed: false, packets: new Set(), states: new Set(), activity: new Set(), presence: null, presenceListeners: new Set(), validateQuery, validateBrightness, validateFeedback, validateDeviceControl, validateEditBuffer, validatePresetStore, validateDeviceSettings }
       leases.set(owner, l)
       const usable = () => { if (closed || l.disposed) throw Error('MIDI lease closed') }
       return {
@@ -144,6 +145,7 @@ export function createMidiBroker(access: MidiAccess, now = () => performance.now
           if (messages.length > 4096 || messages.reduce((n, b) => n + b.length, 0) > 16384) throw Error('MIDI batch budget exceeded')
           const packets = messages.map(b => [...b])
           for (const bytes of packets) {
+            if(authorization.operation==='device-settings'){if(!access.sysexEnabled||!validMessage(bytes)||bytes[0]!==240||!l.validateDeviceSettings(bytes))throw Error('MIDI device-settings packet refused by operation policy');continue}
             if(authorization.operation==='preset-store'){
               if(!access.sysexEnabled||!validMessage(bytes)||bytes[0]!==240||!l.validatePresetStore(bytes))throw Error('MIDI preset-store packet refused by operation policy')
               continue
@@ -178,7 +180,7 @@ export function createMidiBroker(access: MidiAccess, now = () => performance.now
     // Host issues opaque, binding-scoped authorization. A fabricated object or another instance's token fails.
     authorize(owner: string, operation: MidiOperation): MidiAuthorization {
       refresh(); const l = leases.get(owner)
-      if (closed || !l?.state.connected || !['value', 'query', 'brightness', 'feedback','device-control','edit-buffer','preset-store'].includes(operation) || ['query','brightness','edit-buffer','preset-store'].includes(operation) && !access.sysexEnabled) throw Error('MIDI authorization unavailable')
+      if (closed || !l?.state.connected || !['value', 'query', 'brightness', 'feedback','device-control','edit-buffer','preset-store','device-settings'].includes(operation) || ['query','brightness','edit-buffer','preset-store','device-settings'].includes(operation) && !access.sysexEnabled) throw Error('MIDI authorization unavailable')
       const token = Object.freeze({ operation }); grants.set(token, { lease: l, generation: l.state.generation, revoked: false }); return token
     },
     revoke(token: MidiAuthorization) { const grant = grants.get(token); if (grant) grant.revoked = true },

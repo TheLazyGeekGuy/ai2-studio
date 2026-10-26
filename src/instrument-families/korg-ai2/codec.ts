@@ -2,11 +2,11 @@ import {ai2Model,protocols} from './models'
 import {byteArray} from './packing'
 import {ai2Definition} from './definition'
 export {byteArray,pack7,unpack7} from './packing'
-export interface Ai2Program {model:string;channel:number;data:readonly number[];original:readonly number[];index:number}
+export interface Ai2Program {origin?:'hardware';model:string;channel:number;data:readonly number[];original:readonly number[];index:number}
 export interface UnconvertedFrame {offset:number;original:readonly number[];reason:string}
 export const programName=(p:Ai2Program)=>String.fromCharCode(...p.data.slice(0,10)).replace(/[^\x20-\x7e]/g,'?').trimEnd()
 export function validateProgram(raw:Ai2Program):Ai2Program{
- const p=protocols[ai2Model(raw.model).protocol];if(!Number.isInteger(raw.channel)||raw.channel<1||raw.channel>16||byteArray(raw.data).length!==p.size||!Number.isInteger(raw.index)||raw.index<0||raw.index>=p.maxPrograms)throw Error('Programme AI² invalide')
+ const p=protocols[ai2Model(raw.model).protocol];if(raw.origin!==undefined&&raw.origin!=='hardware')throw Error('Invalid Program origin');if(!Number.isInteger(raw.channel)||raw.channel<1||raw.channel>16||byteArray(raw.data).length!==p.size||!Number.isInteger(raw.index)||raw.index<0||raw.index>=Math.max(p.maxPrograms,128))throw Error('Programme AI² invalide')
  byteArray(raw.original);return Object.freeze({...raw,data:Object.freeze([...raw.data]),original:Object.isFrozen(raw.original)?raw.original:Object.freeze([...raw.original])})
 }
 /** Bound codec definition reused by offline file adapters and native leaf adapters. */

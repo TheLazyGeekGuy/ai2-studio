@@ -1,3 +1,4 @@
+import {translate as uiTranslate,useLanguage as useUiLanguage} from '../i18n'
 import {useEffect,useMemo,useRef} from 'react'
 import type {EditorSession,EditorSnapshot} from './contracts'
 import {bindHistoryShortcuts,createHistoryTool} from './history-tools'
@@ -6,7 +7,7 @@ import {translate,useLanguage} from '../i18n'
 /** Parent supplies its existing snapshot: no additional per-packet session subscription. */
 export function EditorHistoryTools({session,snapshot,active=false,onError}:{
   session:EditorSession;snapshot:EditorSnapshot;active?:boolean;onError?:(error:unknown)=>void
-}){
+}){const uiLanguage=useUiLanguage();
   const tool=useMemo(()=>createHistoryTool(session),[session]),error=useRef(onError)
   error.current=onError
   const language=useLanguage(),t=(s:string)=>translate(s,language)
